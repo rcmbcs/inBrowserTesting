@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sari-Sari Shopper Showdown</title>
+  <style>
+//background: url('./storeFront.png') no-repeat center top;
+    body { font-family: sans-serif;  
+      background-size: cover;
+ padding: 20px; }
+    h1 { color: #d35400; }
+    .store, .basket { display: flex; gap: 10px; margin-bottom: 20px; }
+    .item, .slot {
+      width: 100px; height: 100px;
+      border: 2px dashed #aaa;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #fff;
+      cursor: grab;
+    }
+    .slot { border: 2px solid #27ae60; }
+    .item img { width: 60px; height: 60px; }
+    .price { font-size: 14px; color: #555; }
+    #total { font-weight: bold; margin-top: 10px; }
+    #checkBtn { padding: 10px 20px; background: #27ae60; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>Sari-Sari Shopper Showdown</h1>
+<p>Drag the correct items into your basket based on the shopping list!</p>
+
+<h3>Shopping List: Buy "asukal" and "gatas"</h3>
+
+<div class="store" id="store">
+  <!-- Items will be inserted here -->
+</div>
+
+<h3>🧺 Your Basket</h3>
+<div class="basket" id="basket">
+  <div class="slot" data-name=""></div>
+  <div class="slot" data-name=""></div>
+</div>
+
+<button id="checkBtn">Do you have the correct items?</button>
+<div id="total"></div>
+<button id="testBtn">🧪 Run Test Cases</button>
+<div id="testResults"></div>
+<script>
+const items = [
+  { name: "asukal", english: "sugar", price: 10, img: " " },
+  { name: "gatas", english: "milk", price: 15, img: "🥛" },
+  { name: "tinapay", english: "bread", price: 8, img: "🍞" },
+  { name: "kape", english: "coffee", price: 12, img: "☕" },
+  { name: "biskwit", english: "biscuit", price: 7, img: "🍪" },
+  { name: "sabon", english: "soap", price: 5, img: "🧼" }
+];
+
+const store = document.getElementById("store");
+const basketSlots = document.querySelectorAll(".slot");
+const checkBtn = document.getElementById("checkBtn");
+const totalDisplay = document.getElementById("total");
+
+let currentList = [];
+let score = 0;
+let mistakes = 0;
+let round = 1;
+const goal = 5;
+
+// Display progress
+const progressDisplay = document.createElement("div");
+progressDisplay.innerHTML = `<p>🎯 Score: <span id="score">0</span> | ❌ Mistakes: <span id="mistakes">0</span> | 🔁 Round: <span id="round">1</span></p>`;
+document.body.insertBefore(progressDisplay, store);
+
+// Utility to shuffle and pick N random items
+function getRandomItems(arr, n) {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, n);
+}
+
+// Generate new shopping list
+function generateShoppingList() {
+  currentList = getRandomItems(items, 2);
+  const listText = currentList.map(i => `"${i.name}"`).join(" and ");
+  document.querySelector("h3").innerHTML = `📝 Shopping List: Buy ${listText}`;
+}
+
+// Create draggable items
+function populateStore() {
+  store.innerHTML = "";
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.draggable = true;
+    div.dataset.name = item.name;
+    div.dataset.price = item.price;
+    div.innerHTML = `<div>${item.img}</div><div>${item.english}<br><span class="price">₱${item.price}</span></div>`;
+    div.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", JSON.stringify(item));
+    });
+    store.appendChild(div);
+  });
+}
+
+// Allow drop into basket
+basketSlots.forEach(slot => {
+  slot.addEventListener("dragover", e => e.preventDefault());
+  slot.addEventListener("drop", e => {
+    e.preventDefault();
+    const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+    slot.innerHTML = `<div>${data.img}</div><div>${data.english}<br><span class="price">₱${data.price}</span></div>`;
+    slot.dataset.name = data.name;
+    slot.dataset.price = data.price;
+  });
+});
+
+// Check total and correctness
+checkBtn.addEventListener("click", () => {
+  let total = 0;
+  let selected = [];
+
+  basketSlots.forEach(slot => {
+    if (slot.dataset.name) {
+      selected.push(slot.dataset.name);
+      total += parseInt(slot.dataset.price);
+    }
+  });
+
+  const correct = currentList.every(item => selected.includes(item.name));
+  if (correct) {
+    score++;
+    totalDisplay.textContent = `✅ Correct! Total cost: ₱${total}`;
+  } else {
+    mistakes++;
+    totalDisplay.textContent = `❌ Try again! You selected: ${selected.join(", ") || "nothing"}`;
+  }
+
+  round++;
+  updateProgress();
+
+  if (score >= goal) {
+    totalDisplay.textContent = `🎉 You reached ${goal} correct rounds! Great job!`;
+    checkBtn.disabled = true;
+    return;
+  }
+
+  // Reset for next round
+  setTimeout(() => {
+    basketSlots.forEach(slot => {
+      slot.innerHTML = "";
+      slot.dataset.name = "";
+      slot.dataset.price = "";
+    });
+    totalDisplay.textContent = "";
+    generateShoppingList();
+  }, 3000);
+});
+
+// Update progress display
+function updateProgress() {
+  document.getElementById("score").textContent = score;
+  document.getElementById("mistakes").textContent = mistakes;
+  document.getElementById("round").textContent = round;
+}
+
+// Initialize game
+populateStore();
+generateShoppingList();
+
+document.getElementById("testBtn").addEventListener("click", runTests);
+
+function createMockSlot(name = "", price = "") {
+  return {
+    dataset: { name, price }
+  };
+}
+
+function simulateCheck(basketSlots, currentList) {
+  let total = 0;
+  let selected = [];
+
+  basketSlots.forEach(slot => {
+    if (slot.dataset.name) {
+      selected.push(slot.dataset.name);
+      total += parseInt(slot.dataset.price);
+    }
+  });
+
+  const correct = currentList.every(item => selected.includes(item.name));
+  return {
+    correct,
+    total,
+    selected
+  };
+}
+
+function runTests() {
+  const results = [];
+
+  // Test 1: Correct items
+  results.push(testCase("✅ Correct items", [
+    createMockSlot("asukal", "10"),
+    createMockSlot("gatas", "15")
+  ], ["asukal", "gatas"], true, 25));
+
+  // Test 2: Incorrect items
+  results.push(testCase("❌ Incorrect items", [
+    createMockSlot("kape", "12"),
+    createMockSlot("tinapay", "8")
+  ], ["asukal", "gatas"], false, 20));
+
+  // Test 3: One correct item
+  results.push(testCase("🧺 One correct item", [
+    createMockSlot("asukal", "10"),
+    createMockSlot("", "")
+  ], ["asukal", "gatas"], false, 10));
+
+  // Test 4: Empty basket
+  results.push(testCase("⛔ Empty basket", [
+    createMockSlot("", ""),
+    createMockSlot("", "")
+  ], ["asukal", "gatas"], false, 0));
+
+  // Test 5: Game completion
+  let score = 4;
+  const result = simulateCheck([
+    createMockSlot("asukal", "10"),
+    createMockSlot("gatas", "15")
+  ], [{ name: "asukal" }, { name: "gatas" }]);
+  if (result.correct) score++;
+  results.push({
+    name: "🎉 Game completion",
+    passed: score === 5,
+    details: `Score after round: ${score}`
+  });
+
+  // Display results
+  const output = results.map(r =>
+    `<li>${r.name}: ${r.passed ? "✅ Passed" : "❌ Failed"} — ${r.details}</li>`
+  ).join("");
+  document.getElementById("testResults").innerHTML = `<ul>${output}</ul>`;
+}
+
+function testCase(name, basket, listNames, expectedCorrect, expectedTotal) {
+  const list = listNames.map(n => ({ name: n }));
+  const result = simulateCheck(basket, list);
+  const passed = result.correct === expectedCorrect && result.total === expectedTotal;
+  return {
+    name,
+    passed,
+    details: `Selected: ${result.selected.join(", ") || "none"}, Total: ₱${result.total}`
+  };
+}
+</script>
+</body>
+</html>
