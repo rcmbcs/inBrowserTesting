@@ -1,0 +1,31 @@
+// Create the test button
+const testBtn = document.createElement("button");
+testBtn.innerText = "Run Login Test";
+testBtn.style.position = "fixed";
+testBtn.style.top = "20px";
+testBtn.style.right = "20px";
+testBtn.style.padding = "10px 15px";
+testBtn.style.backgroundColor = "#007BFF";
+testBtn.style.color = "white";
+testBtn.style.border = "none";
+testBtn.style.borderRadius = "5px";
+testBtn.style.zIndex = "9999";
+testBtn.style.cursor = "pointer";
+
+// Define the test logic for valid credentials test
+testBtn.onclick = () => {
+  const username = document.querySelector("#username");
+  const password = document.querySelector("#password");
+  const loginBtn = document.querySelector("#log-in");
+
+  if (username && password && loginBtn) {
+    username.value = "username";
+    password.value = "password";
+    loginBtn.click();
+  } else {
+    alert("Login form not found!");
+  }
+};
+
+// Add the button to the page
+document.body.appendChild(testBtn);
