@@ -44,7 +44,9 @@
 
 <button id="checkBtn">Do you have the correct items?</button>
 <div id="total"></div>
-<button id="testBtn">🧪 Run Test Cases</button>
+
+////Test button for demo purposes only. Executed on a local desktop within a temporary browser environment.
+<button id="testBtn">Run Test Cases</button>
 <div id="testResults"></div>
 <script>
 const items = [
