@@ -1,4 +1,4 @@
-// Create the test button
+// Create the test button for demo purposes only. Executed on a local desktop within a temporary browser environment.
 const testBtn = document.createElement("button");
 testBtn.innerText = "Run Login Test";
 testBtn.style.position = "fixed";
